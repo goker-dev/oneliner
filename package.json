@@ -1,6 +1,6 @@
 {
-  "name": "kodkafa-pwa-template",
-  "description": "this is kodkafa pwa template",
+  "name": "oneliner",
+  "description": "oneliner : one line SVG path drawing animation app",
   "private": true,
   "version": "1.0.0",
   "type": "module",

@@ -5,7 +5,7 @@ export const useNavigation = (relation: 'main' | 'footer' = 'main') => {
   if (relation === 'main')
     return [
       {
-        text: t('About Us'),
+        text: t('About'),
         to: '/about',
       },
       {
@@ -21,7 +21,7 @@ export const useNavigation = (relation: 'main' | 'footer' = 'main') => {
   if (relation === 'footer')
     return [
       {
-        text: t('About Us'),
+        text: t('About'),
         to: '/about',
       },
       {

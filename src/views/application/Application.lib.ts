@@ -1,121 +1,169 @@
-import type { Coordinates, EventMap, Events } from '@/views/application/Application.types.ts';
+// import type { Coordinates, EventMap, Events } from '@/views/application/Application.types.ts';
 
 export class Application {
   container: HTMLDivElement = document.createElement('div');
   canvas: HTMLCanvasElement = document.createElement('canvas');
   context: CanvasRenderingContext2D | null = this.canvas.getContext('2d');
-  mouseDown: boolean = false;
+  // mouseDown: boolean = false;
   width: number = 100;
   height: number = 100;
-  gridSize = 60;
+  padding = 300;
+  path: SVGPathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  svg: SVGElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  points: DOMPoint[] = [];
+  distancePerPoint = 1;
+  drawFPS = 60;
+  scale = 1;
+  x = this.padding;
+  y = this.padding;
+  timer: ReturnType<typeof setTimeout> = 0;
+  time = 6000;
+  fillStyle: string = 'rgb(231,225,219)';
+  strokeStyle: string = 'rgb(25,25,25)';
+  lineWidth: number = 1;
+  format = 'video/webm;codecs:h265';
+  name = 'video.webm';
+
   init(container: HTMLDivElement, width: number, height: number, gridSize: number = 50) {
     this.container = container;
+    this.canvas = document.createElement('canvas');
+    this.context = this.canvas.getContext('2d');
     this.setSize(width, height, gridSize);
     this.container.appendChild<HTMLCanvasElement>(this.canvas);
+    // this.path.style.display = 'none';
+    this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    this.svg.appendChild<SVGPathElement>(this.path);
+    this.svg.style.visibility = 'hidden';
+    this.svg.style.position = 'absolute';
+    this.container.appendChild<SVGElement>(this.svg);
+    const { width: w = this.width, height: h = this.height } = this.path.getBoundingClientRect();
+    this.scale = Math.min(
+      (this.width - this.padding * 2) / w,
+      (this.height - this.padding * 2) / h,
+    );
+    this.x = (this.width - w * this.scale) / 2;
+    this.y = (this.height - h * this.scale) / 2;
+    console.log('INIT', { w, h, scale: this.scale, path: this.path.getBoundingClientRect() });
   }
-  private grid() {
-    if (!this.context || !this.gridSize) return;
-    const s = this.gridSize;
-    const pL = 0;
-    const pT = 0;
-    const pR = 0;
-    const pB = 0;
 
+  public remove() {
+    console.log('TIMER', this.timer);
+    if (this.timer as unknown as number) clearInterval(this.timer);
+    this.container.removeChild<HTMLCanvasElement>(this.canvas);
+    this.container.removeChild<SVGElement>(this.svg);
+    this.container.innerText = '';
+  }
+
+  public set(params: {
+    path: string;
+    time: number;
+    background: string;
+    color: string;
+    lineWidth: number;
+  }) {
+    this.path.setAttribute('d', params.path);
+    this.setTime(params.time || 6);
+    this.fillStyle = params.background;
+    this.strokeStyle = params.color;
+    this.lineWidth = params.lineWidth;
+  }
+
+  /**
+   *
+   * @param t ms
+   */
+  public setTime(t: number) {
+    const totalPoints = this.path.getTotalLength() / this.distancePerPoint;
+    this.drawFPS = totalPoints / t;
+    this.time = (totalPoints * 1000) / this.drawFPS;
+    console.log({ time: this.time, fps: this.drawFPS, totalPoints });
+    // this.path.setAttribute('transform', 'scale(2)');
+  }
+
+  public draw() {
+    if (!this.context) return;
+    console.log('DRAWING');
+    this.points = [];
+    this.context?.clearRect(0, 0, this.width, this.height);
+    this.context.save();
+    this.context.fillStyle = this.fillStyle;
     this.context.fillRect(0, 0, this.width, this.height);
-    this.context.beginPath();
-    this.context.strokeStyle = '#333';
-    for (let x = pL; x <= this.width - pR; x += s) {
-      this.context.moveTo(x, pT);
-      this.context.lineTo(x, this.height - pB);
+    this.context.restore();
+    this.context.lineWidth = this.lineWidth;
+    this.context.strokeStyle = this.strokeStyle;
+    this.context.shadowColor = this.strokeStyle;
+    this.context.shadowBlur = 1.5;
+    this.context.shadowOffsetX = 0;
+    this.context.shadowOffsetY = 0;
+    clearInterval(this.timer);
+    this.timer = setInterval(this.getPoints, 1000 / this.drawFPS);
+  }
+
+  private getPoints = () => {
+    const nextPoint = this.points.length * this.distancePerPoint;
+    const pathLength = this.path.getTotalLength();
+    if (nextPoint <= pathLength) {
+      const point = this.path.getPointAtLength(nextPoint);
+      point.x = point.x * this.scale + this.x;
+      point.y = point.y * this.scale + this.y;
+      this.points.push(point);
+      this.redrawCanvas();
     }
-    for (let y = pT; y <= this.height - pB; y += s) {
-      this.context.moveTo(pL, y);
-      this.context.lineTo(this.width - pR, y);
+  };
+
+  private redrawCanvas() {
+    if (!this.context) return;
+    this.context.beginPath();
+    this.context.moveTo(this.points[0].x, this.points[0].y);
+    for (let i = 1; i < this.points.length; i++) {
+      this.context.lineTo(this.points[i].x, this.points[i].y);
     }
     this.context.stroke();
-    this.context.closePath();
   }
 
-  private start = () => {
-    this.mouseDown = true;
-    this.context?.beginPath();
-  };
-  private move = ({ x, y }: Coordinates) => {
-    if (this.mouseDown && this.context) {
-      this.context.strokeStyle = '#fff';
-      this.context.lineJoin = 'round';
-      this.context.lineWidth = 3;
-      this.context.lineTo(x, y);
-      this.context.stroke();
-    }
-  };
-  private stop = () => {
-    this.mouseDown = false;
-    this.context?.closePath();
-  };
-
-  public events: EventMap = {
-    mousedown: this.start,
-    mousemove: this.move,
-    mouseup: this.stop,
-    touchstart: this.start,
-    touchmove: this.move,
-    touchend: this.stop,
-  };
-
-  private handler = (e: MouseEvent | TouchEvent) => {
-    e.preventDefault();
-    if (!Object.keys(this.events).includes(e.type)) return;
-    const type = e.type as unknown as Events;
-    const coors =
-      e instanceof MouseEvent
-        ? {
-            x: e.clientX - (this.container?.offsetLeft || 0),
-            y: e.clientY - (this.container?.offsetTop || 0),
-          }
-        : {
-            x: e.targetTouches[0]?.pageX - (this.container?.offsetLeft || 0),
-            y: e.targetTouches[0]?.pageY - (this.container?.offsetTop || 0),
-          };
-    this.events[type](coors);
-  };
-
   private setSize(width: number, height: number, gridSize: number) {
-    this.width = this.canvas.width = width - (width % gridSize);
-    this.height = this.canvas.height = height - (height % gridSize);
-    this.gridSize = gridSize;
-    this.grid();
+    const dpi = window.devicePixelRatio || 1;
+    const w = width * dpi;
+    const h = height * dpi;
+    this.width = this.canvas.width = w - (w % gridSize);
+    this.height = this.canvas.height = h - (h % gridSize);
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
   }
 
   // ------------------------------------------------------------
   // PUBLIC METHODS
   // ------------------------------------------------------------
-  public resize() {
-    this.setSize(this.container.clientWidth, this.container.clientHeight, this.gridSize);
-  }
 
-  public addListeners() {
-    this.canvas?.addEventListener('mousedown', this.handler, false);
-    this.canvas?.addEventListener('mousemove', this.handler, false);
-    this.canvas?.addEventListener('mouseup', this.handler, false);
-    this.canvas?.addEventListener('touchstart', this.handler, false);
-    this.canvas?.addEventListener('touchmove', this.handler, false);
-    this.canvas?.addEventListener('touchend', this.handler, false);
-    window.addEventListener('resize', () => this.resize(), false);
-  }
-  public exportImage(cb?: () => void) {
+  public exportVideo(cb?: () => void) {
     if (!this.canvas) return;
-    const dataURL = this.canvas.toDataURL('image/png', 100);
-    const link = document.createElement('a');
-    link.style.display = 'none';
-    link.href = dataURL;
-    link.download = 'image';
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(function () {
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(dataURL);
+    this.draw();
+    const n: Blob[] = [];
+    const stream = this.canvas.captureStream(25);
+    const media = new MediaRecorder(stream, { mimeType: this.format });
+    media.ondataavailable = function (e) {
+      e.data && e.data.size > 0 && n.push(e.data);
+    };
+    media.onstop = () => {
+      const blob = new Blob(n, { type: this.format });
+      const href = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = href;
+      a.download = this.name;
+      console.log(href, a);
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(href);
+      }, 100);
+    };
+    media.start(100);
+    setTimeout(() => {
+      // stream.remove();
+      media.stop();
       if (cb) cb();
-    }, 100);
+    }, this.time);
   }
 }
