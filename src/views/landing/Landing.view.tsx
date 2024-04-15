@@ -29,8 +29,11 @@ export function Component() {
                 the shop
               </a>{' '}
               and see the animation by over your cursor on the &ldquo;Featured items&rdquo;. Also,
-              you can find the app code on my <a href='https://www.etsy.com/shop/goker'>GitHub</a>.
-              Happy coding 👹
+              you can find the app code on my{' '}
+              <a title='github goker' href='https://github.com/goker-dev'>
+                GitHub
+              </a>
+              . Happy coding 👹
             </p>
           </div>
         </div>
