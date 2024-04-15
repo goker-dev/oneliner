@@ -23,10 +23,14 @@ export function Component() {
           </div>
           <div className='font-light text-sm'>
             <p>
-              Hi, I&apos;m goker the developer. I develop this app for my{' '}
-              <a href='https://www.etsy.com/shop/goker'>one line posters on etsy</a>. You can check
-              the <a href='https://www.etsy.com/shop/goker'>shop</a> and over your cursor on the
-              &ldquo;Featured items&rdquo;.
+              Hi, I&apos;m goker the developer. I developed the app for my{' '}
+              <a href='https://www.etsy.com/shop/goker'>one line posters on etsy</a>. You can visit{' '}
+              <a title='goker art' href='https://www.etsy.com/shop/goker'>
+                the shop
+              </a>{' '}
+              and see the animation by over your cursor on the &ldquo;Featured items&rdquo;. Also,
+              you can find the app code on my <a href='https://www.etsy.com/shop/goker'>GitHub</a>.
+              Happy coding 👹
             </p>
           </div>
         </div>
