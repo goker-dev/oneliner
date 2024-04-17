@@ -40,7 +40,7 @@ export default ({ mode }) => {
             {
               name: 'APP',
               url: '/app',
-              description: '',
+              description: 'The application shortcut',
             },
           ],
           icons: [

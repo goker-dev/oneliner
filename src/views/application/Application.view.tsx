@@ -31,10 +31,9 @@ export function Component() {
       color: refColor.current?.value || '#000000',
       lineWidth: Number(refLineWidth.current?.value) || 2,
     });
-    app.draw();
-    // app.addListeners();
+    app.loop(0);
     return () => {
-      app.remove();
+      app.uninstall();
     };
   }, []);
 
@@ -46,26 +45,21 @@ export function Component() {
       color: refColor.current?.value || '#000000',
       lineWidth: Number(refLineWidth.current?.value) || 2,
     });
-    app.draw();
   };
   const handleVideo = () => {
     setLoading(true);
+    app.set({
+      path: ref.current?.value || '',
+      time: Number(refTime.current?.value) || 6,
+      background: refBackground.current?.value || '#000000',
+      color: refColor.current?.value || '#000000',
+      lineWidth: Number(refLineWidth.current?.value) || 2,
+    });
     app?.exportVideo(() => setLoading(false));
   };
 
   return (
     <div className='w-full h-full flex items-stretch'>
-      {/*<div className='grow-0 dark:bg-zinc-800/50 px-4 py-2 text-sm '>*/}
-      {/*  <span className='text-gray-400 mr-4'>{t('TOOL BOX:')}</span>*/}
-      {/*  /!*<button onClick={handleSave} className={''}>*!/*/}
-      {/*  /!*  {loading && <i className='icon-spin animate-spin' />}*!/*/}
-      {/*  /!*  {t('IMAGE EXPORT')}*!/*/}
-      {/*  /!*</button>*!/*/}
-      {/*  <button onClick={handleVideo} className={''}>*/}
-      {/*    {loading && <i className='icon-spin animate-spin' />}*/}
-      {/*    {t('VIDEO EXPORT')}*/}
-      {/*  </button>*/}
-      {/*</div>*/}
       <div
         ref={container}
         className='grow p-4 w-full flex items-center justify-center overflow-hidden'
